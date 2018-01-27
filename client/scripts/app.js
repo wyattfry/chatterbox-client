@@ -8,10 +8,15 @@ app.messages = [];
 app.rooms = [];
 
 app.init = function() {
+  $('.create-new-room-form').hide();
   $('.username').on('click', this.handleUsernameClick);
   $('#send .submit').on('submit', this.handleSubmit);
+  $('#roomSelect').on('change', this.showRoomClick);
+  $('.open-create-new-room-form').on('click', this.openCreateNewRoomFormClick);
+  $('.create-room-button').on('click', this.createRoomButtonClick);
 };
 
+// Messages section
 app.send = function(obj) {
   $.ajax({
     url: this.server,
@@ -45,18 +50,11 @@ app.fetch = function() {
   });
 };
 
-// Display messages retrieved from the parse server.
-
 app.clearMessages = function() {
   $('#chats').text('');
 };
 
-app.extractRooms = function(data) {
-  this.rooms = _.uniq(this.rooms.concat(data.map(message => message.roomname)));
-  console.log(this.rooms);
-  this.rooms.forEach(room => this.renderRoom(room));
-};
-
+// Display messages retrieved from the parse server.
 app.renderMessage = function(message) {
   let $messageContainer = $(`<div class="messageContainer" data-roomname="${message.roomname || 'lobby'}"></div>`);
   let $user = $('<span class="username"></span>').text(message.username);
@@ -66,28 +64,73 @@ app.renderMessage = function(message) {
   $('#chats').append($messageContainer);
 };
 
-app.renderRoom = function(roomName) {
-  $('#roomSelect').append($(`<option value ="${roomName}">${roomName}</option>`));
+app.handleSubmit = function() {
+
 };
 
-app.handleUsernameClick = function() {
-  
+// Rooms section
+app.extractRooms = function(data) {
+  this.rooms = _.uniq(this.rooms.concat(data.map(message => message.roomname)));
+  console.log(this.rooms);
+  this.rooms.forEach(room => this.renderRoom(room));
+};
+
+app.renderRoom = function(roomName) {
+  let $roomNode = $(`<option value ="${roomName}">${roomName}</option>`);
+  $('#roomSelect').append($roomNode);
 };
 
 app.showRoomClick = function() {
-  $('');
-  this.clearMessages();
-  
+  let room = $('#roomSelect option:selected').val();
+  let roomMessages = app.messages.filter(x => x.roomname === room);
+  app.clearMessages();
+  roomMessages.forEach(msg => app.renderMessage(msg));
 };
 
-app.handleSubmit = function() {
-  
+app.openCreateNewRoomFormClick = function() {
+  $('.create-new-room-form').show();
+};
+
+app.isValidFormByClass = function(formClass) {
+  let formIsValid = true;
+  $(`${formClass} :input:visible[required="required"]`).each(function() {
+    if (!this.validity.valid || $(this).val() === '') {
+      $(this).focus();
+      formIsValid = false;
+      return false;
+    }
+  });
+  return formIsValid;
+};
+
+app.createRoomButtonClick = function() {
+  if (!app.isValidFormByClass('.create-new-room-form')) {
+    return;
+  }
+  let roomName = $('.room-name').val();
+  if (_.contains(app.rooms, roomName)) {
+    // TODO: display error
+    return;
+  }
+  app.rooms.push(roomName);
+  $('.create-new-room-form').hide();
+  app.renderRoom(roomName);
+  $('#roomSelect').val(roomName); //selects the room
+  app.clearMessages();
+};
+
+
+// User section
+app.handleUsernameClick = function() {
+
 };
 
 $(function() {
   app.init();
   app.fetch();
 });
+
+
 
 
 // Setup a way to refresh the displayed messages (either automatically
