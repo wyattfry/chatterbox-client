@@ -1,7 +1,11 @@
 // YOUR CODE HERE:
 var app = {};
 
-app.server = 'http://parse.hrsf90.hackreactor.com/chatterbox/classes/messages';
+app.server = 'http://parse.sfm6.hackreactor.com/chatterbox/classes/messages';
+
+app.messages = [];
+
+app.rooms = [];
 
 app.init = function() {
   $('.username').on('click', this.handleUsernameClick);
@@ -22,7 +26,22 @@ app.fetch = function() {
   $.ajax({
     url: this.server,
     type: 'GET',
-    success: function() {}
+    data: {order: '-createdAt'},
+    success: function(data) {
+      console.log(data);
+      data.results.forEach(msg => {
+        for (let k in msg) {
+          msg[k] = _.escape(msg[k]);
+        }
+      });
+      console.log(data);
+      app.messages = app.messages.concat(data.results);
+      app.extractRooms(data.results);
+      app.messages.reduceRight((acc, el) => app.renderMessage(el));
+    },
+    error: function(error) {
+      console.log('Fetch failed:', error);
+    }
   });
 };
 
@@ -32,46 +51,44 @@ app.clearMessages = function() {
   $('#chats').text('');
 };
 
+app.extractRooms = function(data) {
+  this.rooms = _.uniq(this.rooms.concat(data.map(message => message.roomname)));
+  console.log(this.rooms);
+  this.rooms.forEach(room => this.renderRoom(room));
+};
+
 app.renderMessage = function(message) {
-  let $messageContainer = $('<div class="messageContainer"></div>');
+  let $messageContainer = $(`<div class="messageContainer" data-roomname="${message.roomname || 'lobby'}"></div>`);
   let $user = $('<span class="username"></span>').text(message.username);
   let $messageText = $('<span class="messageText"></span>').text(message.text);
   $messageContainer.append($user);
   $messageContainer.append($messageText);
   $('#chats').append($messageContainer);
-  console.log('#chats', $('#chats'));
 };
 
 app.renderRoom = function(roomName) {
-  $('#roomSelect').append($(`<span>${roomName}<span>`));
+  $('#roomSelect').append($(`<option value ="${roomName}">${roomName}</option>`));
 };
 
 app.handleUsernameClick = function() {
   
 };
 
+app.showRoomClick = function() {
+  $('');
+  this.clearMessages();
+  
+};
+
 app.handleSubmit = function() {
   
 };
-// Submit message
-// Use proper escaping on any user input. Since you're displaying
-// input that other users have typed, your app is vulnerable XSS
-// attacks. See the section about escaping below.
 
-// $.ajax({
-//   // This is the url you should use to communicate with the parse API server.
-//   url: 'http://parse.hrsf90.hackreactor.com/chatterbox/classes/messages',
-//   type: 'POST',
-//   data: JSON.stringify(message),
-//   contentType: 'application/json',
-//   success: function(data) {
-//     console.log('chatterbox: Message sent');
-//   },
-//   error: function(data) {
-//     // See: https://developer.mozilla.org/en-US/docs/Web/API/console.error
-//     console.error('chatterbox: Failed to send message', data);
-//   }
-// });
+$(function() {
+  app.init();
+  app.fetch();
+});
+
 
 // Setup a way to refresh the displayed messages (either automatically
 // or with a button)

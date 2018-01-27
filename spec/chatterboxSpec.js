@@ -124,6 +124,22 @@ describe('chatterbox', function() {
 
         app.handleSubmit.restore();
       });
+      
     });
+  });
+  
+  describe('interactive', function() {
+    var ajaxSpy = undefined;
+    before(function() {
+      app.init();
+    });
+    
+    it('should fetch and add messages to the DOM', function() {
+      app.clearMessages();
+      app.fetch();
+      expect($('#chats').children().length).to.equal(1);
+      done();
+    });
+    
   });
 });
