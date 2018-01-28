@@ -66,6 +66,7 @@ form input[type=text] {
 }
 
 .chat .username {
+    display: block;
     font-weight: 800;
 }
 
@@ -88,3 +89,13 @@ form input[type=text] {
     background-color: #0090da;
 }
 
+fieldset {
+    border: none;
+}
+
+select {
+    max-width: 300px;
+    height: 30px;
+    font-size: 15px;
+    margin: 10px;
+}
